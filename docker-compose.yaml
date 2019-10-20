@@ -29,7 +29,7 @@ services:
       - 'ttrss-data:/var/www/html'
 
   database:
-    image: 'postgres:11'
+    image: 'postgres:12'
     environment:
       POSTGRES_USER: '${POSTGRES_USER:-ttrss}'
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-ttrss}'

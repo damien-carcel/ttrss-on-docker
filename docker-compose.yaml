@@ -1,0 +1,53 @@
+version: '3.4'
+
+services:
+  front:
+    image: 'carcel/ttrss:nginx'
+    labels:
+      - 'traefik.http.routers.skeleton-api.rule=Host(`${TTRSS_DOMAIN_NAME:-ttrss.docker.localhost}`)'
+    networks:
+      - proxy
+      - ttrss
+    restart: always
+    volumes:
+      - 'ttrss-data:/srv/ttrss'
+
+  fpm:
+    command: 'php-fpm7.3 -F'
+    image: 'carcel/ttrss:fpm'
+    networks:
+      - ttrss
+    restart: always
+    volumes:
+      - 'ttrss-data:/srv/ttrss'
+
+  daemon:
+    command: 'php ./update_daemon2.php'
+    image: 'carcel/ttrss:fpm'
+    networks:
+      - ttrss
+    restart: always
+    user: 'www-data:www-data'
+    volumes:
+      - 'ttrss-data:/srv/ttrss'
+
+  database:
+    image: 'postgres:12'
+    environment:
+      POSTGRES_USER: '${POSTGRES_USER:-ttrss}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-ttrss}'
+      POSTGRES_DB: '${POSTGRES_DB:-ttrss}'
+    networks:
+      - ttrss
+    restart: always
+    volumes:
+      - 'db-data:/var/lib/postgresql/data'
+
+networks:
+  proxy:
+    external: true
+  ttrss:
+
+volumes:
+  ttrss-data:
+  db-data:

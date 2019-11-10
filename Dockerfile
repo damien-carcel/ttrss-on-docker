@@ -18,7 +18,7 @@ RUN tar -xvzf master.tar.gz
 # regularly refresh the feeds.        #
 #######################################
 
-FROM debian:buster-slim AS cli
+FROM debian:buster-slim AS fpm
 
 RUN echo 'APT::Install-Recommends "0" ; APT::Install-Suggests "0" ;' > /etc/apt/apt.conf.d/01-no-recommended && \
     echo 'path-exclude=/usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/path_exclusions && \
@@ -36,6 +36,7 @@ RUN echo 'APT::Install-Recommends "0" ; APT::Install-Suggests "0" ;' > /etc/apt/
     apt-get --yes install \
         php7.3-apcu \
         php7.3-cli \
+        php7.3-fpm \
         php7.3-intl \
         php7.3-json \
         php7.3-mbstring \
@@ -45,35 +46,17 @@ RUN echo 'APT::Install-Recommends "0" ; APT::Install-Suggests "0" ;' > /etc/apt/
         php7.3-xml && \
     apt-get clean && \
     apt-get --yes autoremove --purge && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    mkdir -p /run/php
 
 COPY php/ttrss.ini /etc/php/7.3/cli/conf.d/99-ttrss.ini
-
-COPY --from=ttrss --chown=www-data:www-data /tmp/tt-rss /var/www/html
-
-VOLUME /var/www/html
-WORKDIR /var/www/html
-
-#########################################
-# Runs Tiny Tiny RSS through FPM        #
-# Needs to be used with Nginx or Apache #
-#########################################
-
-FROM cli AS fpm
-
-RUN apt-get update && \
-    apt-get --yes install \
-        php7.3-fpm && \
-    apt-get clean && \
-    apt-get --yes autoremove --purge && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN mkdir -p /run/php
-
 COPY php/ttrss.ini /etc/php/7.3/fpm/conf.d/99-ttrss.ini
 COPY fpm/ttrss.conf /etc/php/7.3/fpm/pool.d/zzz-ttrss.conf
 
-CMD ["php-fpm7.3", "-F"]
+COPY --from=ttrss --chown=www-data:www-data /tmp/tt-rss /srv/ttrss
+
+VOLUME /srv/ttrss
+WORKDIR /srv/ttrss
 
 ######################################
 # Nginx image to be ran with FPM one #
@@ -83,6 +66,7 @@ FROM nginx AS nginx
 
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
-VOLUME /var/www/html
-WORKDIR /var/www/html
+RUN mkdir -p /srv/ttrss && chown -R www-data:www-data /srv/ttrss
+
+VOLUME /srv/ttrss
+WORKDIR /srv/ttrss

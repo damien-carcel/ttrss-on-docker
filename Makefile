@@ -10,12 +10,8 @@ build-front:
 build-fpm:
 	DOCKER_BUILDKIT=1 docker build --pull . --tag carcel/ttrss:fpm --target=fpm
 
-.PHONY: build-daemon
-build-daemon:
-	DOCKER_BUILDKIT=1 docker build --pull . --tag carcel/ttrss:daemon --target=cli
-
 .PHONY: build
-build: build-fpm build-daemon build-front
+build: build-fpm build-front
 
 .PHONY: up
 up: pull build

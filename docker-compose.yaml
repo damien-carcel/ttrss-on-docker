@@ -10,23 +10,26 @@ services:
       - ttrss
     restart: always
     volumes:
-      - 'ttrss-data:/var/www/html'
+      - 'ttrss-data:/srv/ttrss'
 
   fpm:
+    command: 'php-fpm7.3 -F'
     image: 'carcel/ttrss:fpm'
     networks:
       - ttrss
     restart: always
     volumes:
-      - 'ttrss-data:/var/www/html'
+      - 'ttrss-data:/srv/ttrss'
 
   daemon:
-    image: 'carcel/ttrss:daemon'
+    command: 'php ./update_daemon2.php'
+    image: 'carcel/ttrss:fpm'
     networks:
       - ttrss
     restart: always
+    user: 'www-data:www-data'
     volumes:
-      - 'ttrss-data:/var/www/html'
+      - 'ttrss-data:/srv/ttrss'
 
   database:
     image: 'postgres:12'

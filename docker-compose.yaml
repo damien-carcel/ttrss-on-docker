@@ -40,6 +40,8 @@ services:
     networks:
       - ttrss
     restart: always
+    volumes:
+      - 'db-data:/var/lib/postgresql/data'
 
 networks:
   proxy:
@@ -48,3 +50,4 @@ networks:
 
 volumes:
   ttrss-data:
+  db-data:

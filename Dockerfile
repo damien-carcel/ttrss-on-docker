@@ -11,12 +11,10 @@ ADD https://git.tt-rss.org/fox/tt-rss/archive/master.tar.gz .
 
 RUN tar -xvzf master.tar.gz
 
-#######################################
-# Base image to install and configure #
-# PHP as Tiny Tiny RSS needs. It will #
-# also runs Tiny Tiny RSS daemon to   #
-# regularly refresh the feeds.        #
-#######################################
+################################################################
+# FPM image to configure and run Tiny Tiny RSS.                #
+# It will also runs the daemon to regularly refresh the feeds. #
+################################################################
 
 FROM debian:buster-slim AS fpm
 
@@ -54,6 +52,8 @@ COPY php/ttrss.ini /etc/php/7.3/fpm/conf.d/99-ttrss.ini
 COPY fpm/ttrss.conf /etc/php/7.3/fpm/pool.d/zzz-ttrss.conf
 
 COPY --from=ttrss --chown=www-data:www-data /tmp/tt-rss /srv/ttrss
+
+RUN sed -i "s/define('SESSION_COOKIE_LIFETIME'.*/define('SESSION_COOKIE_LIFETIME', 86400*30);/" /srv/ttrss/config.php-dist
 
 VOLUME /srv/ttrss
 WORKDIR /srv/ttrss

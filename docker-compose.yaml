@@ -4,7 +4,13 @@ services:
   front:
     image: 'carcel/ttrss:nginx'
     labels:
-      - 'traefik.http.routers.skeleton-api.rule=Host(`${TTRSS_DOMAIN_NAME:-ttrss.docker.localhost}`)'
+      - 'traefik.http.middlewares.redirect-ttrss-http-to-https.redirectScheme.scheme=https'
+      - 'traefik.http.routers.ttrss.entrypoints=web'
+      - 'traefik.http.routers.ttrss.middlewares=redirect-ttrss-http-to-https'
+      - 'traefik.http.routers.ttrss.rule=Host(`${TTRSS_DOMAIN_NAME:-ttrss.docker.localhost}`)'
+      - 'traefik.http.routers.ttrss-with-https.entrypoints=websecure'
+      - 'traefik.http.routers.ttrss-with-https.rule=Host(`${TTRSS_DOMAIN_NAME:-ttrss.docker.localhost}`)'
+      - 'traefik.http.routers.ttrss-with-https.tls=true'
     networks:
       - proxy
       - ttrss
